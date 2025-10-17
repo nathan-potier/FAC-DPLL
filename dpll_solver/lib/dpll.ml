@@ -93,17 +93,17 @@ let solveur_split clauses = solveur_split_rec clauses []
     - sinon renvoie None *)
 let pur clauses =
   
-  let lits = List.flatten clauses in 
-  let rec trovue_pur l = 
+  let list = List.flatten clauses in 
+  let rec trouve_pur l = 
     match l with
     | [] -> None
     | lit :: rest -> 
       if List.mem (-lit) l then 
-        trovue_pur rest  
+        trouve_pur rest  
       else 
         Some lit
   in 
-  trovue_pur lits
+  trouve_pur list
 ;;
 
 
