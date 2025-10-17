@@ -35,6 +35,10 @@ let %test "length 3" = (length [1;2;3] = 3)
 let %test "length big" = let big = 10000000 in (length (big_list big []) = big)
 
 
+
+
+
+
 (** Voici une proposition de types pour une implémentation simple.
     Vous pouvez éventuellement changer les types dans un deuxième temps. *)
 type literal = int
@@ -94,11 +98,10 @@ let solveur_split clauses = solveur_split_rec clauses []
 let pur clauses =
   
   let list = List.flatten clauses in 
-  let rec trouve_pur l = 
-    match l with
+  let rec trouve_pur = function
     | [] -> None
     | lit :: rest -> 
-      if List.mem (-lit) l then 
+      if List.mem (-lit) list then 
         trouve_pur rest  
       else 
         Some lit
@@ -152,3 +155,62 @@ let rec solveur_dpll_rec clauses interpretation =
 ;;
 
 let solveur_dpll clauses = solveur_dpll_rec clauses []
+
+(* --- Tests simplifie --- *)
+let%test "simplifie supprime clauses satisfaites" =
+  simplifie 1 [[1;2]; [-1;3]; [2;3]] = [[3]; [2;3]]
+
+let%test "simplifie supprime -l de clauses restantes" =
+  simplifie (-2) [[1;2]; [-2;3]; [2;3]] = [[1]; [3]]
+
+let%test "simplifie rien à supprimer" =
+  simplifie 4 [[1;2]; [3;5]] = [[1;2]; [3;5]]
+
+(* --- Tests unitaire --- *)
+let%test "unitaire vide" =
+  unitaire [] = None
+
+let%test "unitaire simple" =
+  unitaire [[1]; [2;3]] = Some 1
+
+let%test "unitaire pas de clause unitaire" =
+  unitaire [[1;2]; [-1;3]] = None
+
+(* --- Tests pur --- *)
+let%test "pur simple" =
+  pur [[1;2]; [-1;3]] = Some 2
+
+let%test "pur avec plusieurs littéraux purs" =
+  let r = pur [[4;5]; [6]] in
+  r = Some 4 || r = Some 5 || r = Some 6
+
+let%test "pur aucun littéral pur" =
+  pur [[1; -1]; [2; -2]] = None
+
+(* --- Tests solveur_dpll --- *)
+let%test "solveur simple SAT" =
+  match solveur_dpll [[1]; [-1;2]] with
+  | Sat i -> i = [1;2] || i = [2;1]
+  | Unsat -> false
+
+let%test "solveur simple UNSAT" =
+  solveur_dpll [[1]; [-1]] = Unsat
+
+
+let%test "solveur SAT avec clause unitaire" =
+  match solveur_dpll [[1]; [2;3]] with
+  | Sat i -> i = [2;1]  
+  | Unsat -> false
+;;
+
+
+
+let%test "solveur SAT avec pur" =
+  match solveur_dpll [[1;2]; [3]] with
+  | Sat i -> i = [1;3]  
+  | Unsat -> false
+
+let%test "solveur plus complexe SAT" =
+  match solveur_dpll [[1;2]; [-1;2]; [-2;3]] with
+  | Sat i -> i = [2;3]  
+  | Unsat -> false
