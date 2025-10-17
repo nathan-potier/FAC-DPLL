@@ -20,7 +20,7 @@ Questions sur votre code
    et que ensuite `./dpll sudoku-4x4.cnf` donne la réponse attendue (voir
    fichier README) ?
 
-   Après avoit testé `dune exec dpll_solver ../examples/SAT/sudoku-4x4.cnf`,
+   Après avoir testé `dune exec dpll_solver ../examples/SAT/sudoku-4x4.cnf`,
    la commande s'exécute sans erreurs ou warnings et donne bien la réponse attendue.
 
 ---
@@ -35,10 +35,10 @@ Questions sur votre code
    Non, nous n'avons pas utilisé la fontion `filter_map` dans notre implémentation de `simplifie`.
    Notre implémentation fonctione comme ceci :
       - Elle parcourt récursivement la liste des clauses.
-      - Si une clause contient le littéral l que l’on veut mettre à vrai, cette clause 
+      - Si une clause contient le littéral l, cette clause 
       est considérée comme satisfaite donc on la supprime de la CNF.
       - Sinon, on crée une nouvelle clause c' en enlevant toutes les occurrences de -l avec 
-      `List.filter`, car ces littéraux sont maintenant insatisfiable.
+      `List.filter`.
       - Pour finir, la clause simplifiée c' est ajoutée à la liste des clauses restantes et 
       la fonction continue récursivement sur le reste de la CNF.
 
