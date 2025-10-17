@@ -92,8 +92,20 @@ let solveur_split clauses = solveur_split_rec clauses []
       ce littéral ;
     - sinon renvoie None *)
 let pur clauses =
-  (* à compléter *)
-  0
+  
+  let lits = List.flatten clauses in 
+  let rec trovue_pur l = 
+    match l with
+    | [] -> None
+    | lit :: rest -> 
+      if List.mem (-lit) l then 
+        trovue_pur rest  
+      else 
+        Some lit
+  in 
+  trovue_pur lits
+;;
+
 
 (** unitaire : cnf -> literal option
     - si `clauses' contient au moins une clause unitaire, retourne
@@ -108,7 +120,35 @@ let rec unitaire clauses =
 
 (** solveur_dpll_rec : cnf -> interpretation -> resultat *)
 let rec solveur_dpll_rec clauses interpretation =
-  (* à compléter *)
-  Unsat
+  match clauses with
+  | [] -> Sat interpretation
+  | c :: _ when c = [] -> Unsat
+  | _ -> 
+    (
+      match unitaire clauses with
+      | Some l -> 
+          let clauses' = simplifie l clauses in
+          solveur_dpll_rec clauses' (l :: interpretation)
+
+      | None ->
+        (
+          match pur clauses with
+          | Some l -> 
+            let clauses' = simplifie l clauses in 
+            solveur_dpll_rec clauses' (l :: interpretation)
+          
+          | None -> 
+            (
+              let l = List.hd (List.hd clauses) in
+              let clauses_true = simplifie l clauses in 
+              match solveur_dpll_rec clauses_true (l :: interpretation) with
+              | Sat i -> Sat i
+              | Unsat ->
+                let clauses_false = simplifie (-l) clauses in 
+                solveur_dpll_rec clauses_false ((-l) :: interpretation)
+            )
+        )
+    )
+;;
 
 let solveur_dpll clauses = solveur_dpll_rec clauses []
