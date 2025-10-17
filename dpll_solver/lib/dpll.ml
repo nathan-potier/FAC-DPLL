@@ -92,9 +92,12 @@ let pur clauses =
     - si `clauses' contient au moins une clause unitaire, retourne
       le littéral de cette clause unitaire ;
     - sinon renvoie None *)
-let unitaire clauses =
-  (* à compléter *)
-  0
+let rec unitaire clauses =
+  match clauses with
+  | [] -> None
+  | [lit] :: _ -> Some lit (*Clause unitaire trvouée*)
+  | _ :: rest -> unitaire rest 
+;;
 
 (** solveur_dpll_rec : cnf -> interpretation -> resultat *)
 let rec solveur_dpll_rec clauses interpretation =
