@@ -114,7 +114,7 @@ let pur clauses =
 let rec unitaire clauses =
   match clauses with
   | [] -> None
-  | [lit] :: _ -> Some lit (*Clause unitaire trvouée*)
+  | [lit] :: _ -> Some lit (*Clause unitaire trouvée*)
   | _ :: rest -> unitaire rest 
 ;;
 
