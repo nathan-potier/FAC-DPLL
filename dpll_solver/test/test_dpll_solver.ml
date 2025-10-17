@@ -17,6 +17,51 @@ let coloriage = [
   [-8;-17];[-9;-18];[-10;-13];[-11;-14];[-12;-15];[-13;-16];
   [-14;-17];[-15;-18]]
 
+
+
+let%test "simplifie supprime clauses satisfaites" =
+  simplifie 1 [[1;2]; [-1;3]; [2;3]] = [[3]; [2;3]]
+
+let%test "simplifie supprime -l de clauses restantes" =
+  simplifie 2 [[1;2]; [-2;3]; [2;3]] = [[1]; [3]; [3]]
+
+let%test "simplifie rien à supprimer" =
+  simplifie 4 [[1;2]; [3;5]] = [[1;2]; [3;5]]
+
+let%test "unitaire vide" =
+  unitaire [] = None
+
+let%test "unitaire simple" =
+  unitaire [[1]; [2;3]] = Some 1
+
+let%test "unitaire pas de clause unitaire" =
+  unitaire [[1;2]; [-1;3]] = None
+
+let%test "pur simple" =
+  pur [[1;2]; [-1;3]] = Some 2  (* 2 est pur, -1 et 1 s'annulent *)
+
+let%test "pur avec plusieurs littéraux purs" =
+  pur [[4;5]; [6]] = Some 4      (* n'importe lequel des purs, retourne le premier rencontré *)
+
+let%test "pur aucun littéral pur" =
+  pur [[1; -1]; [2; -2]] = None
+
+let%test "solveur simple SAT" =
+  solveur_dpll [[1]; [-1;2]] = Sat [1;2]  (* ou Sat [-1;2] selon ordre de parcours *)
+
+let%test "solveur simple UNSAT" =
+  solveur_dpll [[1]; [-1]] = Unsat
+
+let%test "solveur SAT avec clause unitaire" =
+  solveur_dpll [[1]; [2;3]] = Sat [1;2;3]
+
+let%test "solveur SAT avec pur" =
+  solveur_dpll [[1;2]; [3]] = Sat [3;1;2]
+
+let%test "solveur plus complexe SAT" =
+  solveur_dpll [[1;2]; [-1;2]; [-2;3]] = Sat [1;2;3]  (* exemple simple avec propagation unitaire *)
+
+
 let () = print_string "Test 1:\n"
 let () = print_modele (solveur_split (cnf_of_int_list_list systeme))
 let () = print_string "Test 2:\n"
