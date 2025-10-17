@@ -57,9 +57,16 @@ let print_modele: resultat -> unit = function
 (** simplifie : literal -> cnf -> cnf 
    applique la simplification de l'ensemble des clauses en mettant
    le littéral l à vrai *)
-let simplifie l clauses =
-  (* à compléter *)
-  []
+let rec simplifie l clauses =
+  match clauses with
+  | [] -> []
+  | c :: rest ->
+      if List.mem l c then
+        simplifie l rest
+      else
+        let c' = List.filter (fun x -> x <> -l) c in
+        c' :: simplifie l rest
+;;
 
 (** solveur_split_rec : cnf -> interpretation -> resultat
    exemple d'utilisation de `simplifie' cette fonction ne doit pas être modifiée, sauf si vous changez 
