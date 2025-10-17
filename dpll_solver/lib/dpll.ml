@@ -94,10 +94,11 @@ let solveur_split clauses = solveur_split_rec clauses []
 let pur clauses =
   
   let list = List.flatten clauses in 
-  let rec trouve_pur = function
+  let rec trouve_pur l = 
+    match l with
     | [] -> None
     | lit :: rest -> 
-      if List.mem (-lit) list then 
+      if List.mem (-lit) l then 
         trouve_pur rest  
       else 
         Some lit
