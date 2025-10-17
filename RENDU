@@ -20,8 +20,8 @@ Questions sur votre code
    et que ensuite `./dpll sudoku-4x4.cnf` donne la réponse attendue (voir
    fichier README) ?
 
-Après avoit testé `dune exec dpll_solver ../examples/SAT/sudoku-4x4.cnf`,
-la commande s'exécute sans erreurs ou warnings et donne bien la réponse attendue.
+   Après avoit testé `dune exec dpll_solver ../examples/SAT/sudoku-4x4.cnf`,
+   la commande s'exécute sans erreurs ou warnings et donne bien la réponse attendue.
 
 ---
 
@@ -32,12 +32,15 @@ la commande s'exécute sans erreurs ou warnings et donne bien la réponse attend
    - Si non, expliquez en quelques phrases en français comment
      fonctionne votre implémentation de `simplifie`.
 
-Non, nous n'avons pas utilisé la fontion `filter_map` dans notre implémentation de `simplifie`.
-Notre implémentation fonctione comme ceci :
-   - Elle parcourt récursivement la liste des clauses.
-   - Si une clause contient le littéral l que l’on veut mettre à vrai, cette clause est considérée comme satisfaite donc on la supprime de la CNF.
-   - Sinon, on crée une nouvelle clause c' en enlevant toutes les occurrences de -l avec List.filter, car ces littéraux sont maintenant insatisfiable.
-   - Pour finir, la clause simplifiée c' est ajoutée à la liste des clauses restantes, et la fonction continue récursivement sur le reste de la CNF.
+   Non, nous n'avons pas utilisé la fontion `filter_map` dans notre implémentation de `simplifie`.
+   Notre implémentation fonctione comme ceci :
+      - Elle parcourt récursivement la liste des clauses.
+      - Si une clause contient le littéral l que l’on veut mettre à vrai, cette clause 
+      est considérée comme satisfaite donc on la supprime de la CNF.
+      - Sinon, on crée une nouvelle clause c' en enlevant toutes les occurrences de -l avec 
+      `List.filter`, car ces littéraux sont maintenant insatisfiable.
+      - Pour finir, la clause simplifiée c' est ajoutée à la liste des clauses restantes et 
+      la fonction continue récursivement sur le reste de la CNF.
 
 ---
 
@@ -50,7 +53,13 @@ Notre implémentation fonctione comme ceci :
    comment ces fonctions auxiliaires sont utilisées dans votre
    implémentation de la fonction `unitaire`.
 
-**à remplir**
+   Non, nous n'avons pas utilisé de fonction auxiliaire externe dans notre implémentation de `unitaire`.
+   Notre implémentation fonctionne comme ceci:
+      - Elle parcourt récursivement la liste des clauses.
+      - Pour chaque clause, elle vérifie si la clause est unitaire (donc un seul littéral).
+      - Si une clause unitaire est trouvée, elle retourne ce littéral avec Some.
+      - Sinon, la fonction continue sur le reste des clauses et retourne None si aucune clause 
+      unitaire n’est trouvée.
 
 ---
 
@@ -59,7 +68,15 @@ Notre implémentation fonctione comme ceci :
    quelques phrases en français comment ces fonctions auxiliaires sont
    utilisées dans votre implémentation de la fonction `pur`.
 
-**à remplir**
+   Pour `pur`, nous utilisons uniquement des fonctions de la bibliothèque standard List :
+      - `List.flatten` pour transformer la liste de clauses en une seule liste des littéraux,
+         pour faciliter la recherche des littéraux purs.
+      - `List.mem` pour vérifier si l’opposé d’un littéral (−lit) est présent dans la liste; 
+         si c’est le cas, le littéral n’est pas pur.
+
+   La fonction pur fonctionne ainsi : elle parcourt récursivement la liste des littéraux obtenue avec 
+   `List.flatten` et retourne le premier littéral où son opposé n’est pas présent, ou None si 
+   aucun littéral pur n’existe.
 
 ---
 
