@@ -1,4 +1,4 @@
-open List
+
 
 (** Ce fichier contient les fonctions à compléter. *)
 
@@ -28,11 +28,11 @@ let rec big_list n acc =
   if n <= 0 then acc else big_list (n-1) (n::acc)
 
 (* On teste d'abord sur une petite liste.*)
-let %test "length vide" = (length [] = 0)
-let %test "length 1" = (length [1] = 1)
-let %test "length 3" = (length [1;2;3] = 3)
+let %test "length vide" = (List.length [] = 0)
+let %test "length 1" = (List.length [1] = 1)
+let %test "length 3" = (List.length [1;2;3] = 3)
 (* Puis sur une grande liste pour vérifier qu'il n'y a pas de débordement de pile. *)
-let %test "length big" = let big = 10000000 in (length (big_list big []) = big)
+let %test "length big" = let big = 10000000 in (List.length (big_list big []) = big)
 
 
 
@@ -54,7 +54,7 @@ let cnf_of_int_list_list (l: int list list) : cnf = l
 let print_modele: resultat -> unit = function
   | Unsat   -> print_string "UNSAT\n"
   | Sat modele -> print_string "SAT\n";
-     let modele_trie = sort (fun i j -> (abs i) - (abs j)) modele in
+     let modele_trie = List.sort (fun i j -> (abs i) - (abs j)) modele in
      List.iter (fun i -> print_int i; print_string " ") modele_trie;
      print_string "0\n"
 
@@ -80,9 +80,9 @@ let rec solveur_split_rec clauses interpretation =
   (* l'ensemble vide de clauses est satisfiable *)
   if clauses = [] then Sat interpretation else
   (* la clause vide n'est jamais satisfiable *)
-  if mem [] clauses then Unsat else
+  if List.mem [] clauses then Unsat else
   (* branchement *) 
-  let l = hd (hd clauses) in
+  let l = List.hd (List.hd clauses) in
   let branche = solveur_split_rec (simplifie l clauses) (l::interpretation) in
   match branche with
   | Unsat -> solveur_split_rec (simplifie (-l) clauses) ((-l)::interpretation)
@@ -97,16 +97,27 @@ let solveur_split clauses = solveur_split_rec clauses []
       ce littéral ;
     - sinon renvoie None *)
 let pur clauses =
-  let list = List.flatten clauses in 
-  let rec trouve_pur = function
+  (* aplatir et trier par valeur absolue *)
+  let lits = List.sort (fun a b -> compare (abs a) (abs b)) (List.flatten clauses) in
+
+  (* parcours des littéraux pour détecter un littéral pur *)
+  let rec cherche = function
     | [] -> None
-    | lit :: rest -> 
-      if List.mem (-lit) list then 
-        trouve_pur rest  
-      else 
-        Some lit
-  in 
-  trouve_pur list
+    | x :: xs ->
+        (* prendre tous les littéraux ayant la même valeur absolue que x *)
+        let (groupe, reste) =
+          List.fold_left (fun (acc, rem) y ->
+            if abs y = abs (List.hd acc) then (y :: acc, rem)
+            else (acc, y :: rem)
+          ) ([x], []) xs
+        in
+        let groupe = List.rev groupe in
+        if List.exists (fun v -> v = -(List.hd groupe)) groupe then
+          cherche (List.rev reste)  (* pas pur, continuer *)
+        else
+          Some (List.hd groupe)     (* pur trouvé *)
+  in
+  cherche lits
 ;;
 
 
