@@ -3,10 +3,10 @@
 
 # Liste des fichiers CNF à tester (tous relatifs depuis dpll_solver/)
 CNF_FILES=(
-  "../examples/SAT/sudoku-9x9-god.cnf"
   "../examples/SAT/sudoku-4x4.cnf"
   "../examples/SAT/sudoku-9x9-easy.cnf"
   "../examples/SAT/coloriage.cnf"
+  "../examples/SAT/sudoku-9x9-god.cnf"
 )
 
 # Boucle sur chaque fichier CNF
