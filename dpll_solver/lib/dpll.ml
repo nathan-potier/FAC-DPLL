@@ -96,32 +96,27 @@ let solveur_split clauses = solveur_split_rec clauses []
 (** Solveur dpll récursif *)
 
 (** pur : cnf -> literal option
-    On trie les littéraux par valeur absolue, puis on regroupe ceux qui ont la même |lit|.
-    Pour chaque groupe (même variable d'indice i), si on trouve à la fois i et -i,
-    la variable n'est pas pure ; si on trouve seulement un signe, c'est un littéral pur.
-*)
+    - si `clauses' contient au moins un littéral pur, retourne
+      ce littéral ;
+    - sinon renvoie None *)
 let pur clauses =
-  (* aplatir et trier par valeur absolue *)
+  (* Aplatir et trier par valeur absolue *)
   let lits = List.sort (fun a b -> compare (abs a) (abs b)) (List.flatten clauses) in
-
-  (* parcours des littéraux pour détecter un littéral pur *)
-  let rec cherche = function
+  let rec aux = function
     | [] -> None
     | x :: xs ->
-        (* prendre tous les littéraux ayant la même valeur absolue que x *)
-        let (groupe, reste) =
-          List.fold_left (fun (acc, rem) y ->
-            if abs y = abs (List.hd acc) then (y :: acc, rem)
-            else (acc, y :: rem)
-          ) ([x], []) xs
+        let rec fold_group (current_abs, seen_neg, last_lit) = function
+          | [] -> if not seen_neg then Some last_lit else None
+          | y :: ys ->
+              if abs y = current_abs then
+                fold_group (current_abs, seen_neg || y = -last_lit, last_lit) ys
+              else
+                if not seen_neg then Some last_lit
+                else aux (y :: ys)
         in
-        let groupe = List.rev groupe in
-        if List.exists (fun v -> v = -(List.hd groupe)) groupe then
-          cherche (List.rev reste)  (* pas pur, continuer *)
-        else
-          Some (List.hd groupe)     (* pur trouvé *)
+        fold_group (abs x, false, x) xs
   in
-  cherche lits
+  aux lits
 ;;
 
 
