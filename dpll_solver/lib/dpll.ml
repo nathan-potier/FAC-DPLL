@@ -114,11 +114,13 @@ let pur clauses =
     - si `clauses' contient au moins une clause unitaire, retourne
       le littéral de cette clause unitaire ;
     - sinon renvoie None *)
-let rec unitaire clauses =
-  match clauses with
-  | [] -> None (* Cas de base : Aucune clause restante : pas de clause unitaire. *)
-  | [lit] :: _ -> Some lit (* Clause unitaire trouvée *)
-  | _ :: rest -> unitaire rest (* Clause unitaire non trouvée donc on passe à la prochaine*)
+let rec unitaire = function
+  | [] -> None
+  | clause :: rest ->
+      (match clause with
+       | [] -> unitaire rest          (* Clause vide : pas unitaire *)
+       | [lit] -> Some lit            (* Clause unitaire trouvée *)
+       | _ -> unitaire rest)          (* Clause non unitaire *)
 ;;
 
 (** solveur_dpll_rec : cnf -> interpretation -> resultat 
