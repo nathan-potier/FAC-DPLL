@@ -63,13 +63,14 @@ let print_modele: resultat -> unit = function
    le littéral l à vrai *)
 let rec simplifie l clauses =
   match clauses with
-  | [] -> []
+  | [] -> [] (* Cas de base : plus aucune clause à traiter, on renvoie la liste vide. *)
   | c :: rest ->
+    (* Si la clause contient le littéral vrai `l`, elle est satisfaite : on la supprime. *)
       if List.mem l c then
-        simplifie l rest
+        simplifie l rest 
       else
-        let c' = List.filter (fun x -> x <> -l) c in
-        c' :: simplifie l rest
+        let c' = List.filter (fun x -> x <> -l) c in (* Sinon, on enlève le littéral opposé `-l` de la clause, qui est devenu faux. *)
+        c' :: simplifie l rest (* On reconstruit la CNF simplifiée en traitant récursivement le reste. *)
 ;;
 
 (** solveur_split_rec : cnf -> interpretation -> resultat
@@ -96,7 +97,6 @@ let solveur_split clauses = solveur_split_rec clauses []
       ce littéral ;
     - sinon renvoie None *)
 let pur clauses =
-  
   let list = List.flatten clauses in 
   let rec trouve_pur = function
     | [] -> None
@@ -116,37 +116,52 @@ let pur clauses =
     - sinon renvoie None *)
 let rec unitaire clauses =
   match clauses with
-  | [] -> None
-  | [lit] :: _ -> Some lit (*Clause unitaire trouvée*)
-  | _ :: rest -> unitaire rest 
+  | [] -> None (* Cas de base : Aucune clause restante : pas de clause unitaire. *)
+  | [lit] :: _ -> Some lit (* Clause unitaire trouvée *)
+  | _ :: rest -> unitaire rest (* Clause unitaire non trouvée donc on passe à la prochaine*)
 ;;
 
-(** solveur_dpll_rec : cnf -> interpretation -> resultat *)
+(** solveur_dpll_rec : cnf -> interpretation -> resultat 
+    Étapes :
+        1. Si la CNF est vide -> toutes les clauses sont satisfaites -> SAT.
+        2. Si une clause vide est présente -> contradiction -> UNSAT.
+        3. Sinon, on simlifie :
+          a) On regarde si une clause unitaire existe
+          b) On simplifie les littéraux purs
+        4. Si aucune simplification possible, on choisit un littéral et on tente :
+          - d’abord `lit` vrai
+          - sinon `lit` faux*)
 let rec solveur_dpll_rec clauses interpretation =
   match clauses with
-  | [] -> Sat interpretation
-  | c :: _ when c = [] -> Unsat
+  | [] -> Sat interpretation (* Etape 1 : toutes les clauses ont été satisfaites -> solution trouvée. *)
+  | c :: _ when c = [] -> Unsat (* Etape 2 : une clause vide existe -> contradiction -> formule insatisfiable. *)
   | _ -> 
     (
       match unitaire clauses with
       | Some l -> 
+          (* Etape 3a : une clause unitaire existe -> on doit lui attribue une valeur. *)
           let clauses' = simplifie l clauses in
-          solveur_dpll_rec clauses' (l :: interpretation)
+          solveur_dpll_rec clauses' (l :: interpretation)  
 
       | None ->
         (
           match pur clauses with
           | Some l -> 
+            (* Cas 3b : un littéral pur existe -> on le met à vrai. *)
             let clauses' = simplifie l clauses in 
             solveur_dpll_rec clauses' (l :: interpretation)
           
           | None -> 
             (
+              (* Cas 4 : aucun littéral pur ou unitaire -> on split (on met d'abord le litteral à vraie puis à faux). *)
               let l = List.hd (List.hd clauses) in
+              (* On essaie d’abord la branche où l = vrai. *)
               let clauses_true = simplifie l clauses in 
               match solveur_dpll_rec clauses_true (l :: interpretation) with
+              (* Si satisfiable, on la retourne. *)
               | Sat i -> Sat i
               | Unsat ->
+                (* Sinon, on explore la branche où l = faux. *)
                 let clauses_false = simplifie (-l) clauses in 
                 solveur_dpll_rec clauses_false ((-l) :: interpretation)
             )
