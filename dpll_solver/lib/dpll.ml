@@ -96,9 +96,10 @@ let solveur_split clauses = solveur_split_rec clauses []
 (** Solveur dpll récursif *)
 
 (** pur : cnf -> literal option
-    - si `clauses' contient au moins un littéral pur, retourne
-      ce littéral ;
-    - sinon renvoie None *)
+    On trie les littéraux par valeur absolue, puis on regroupe ceux qui ont la même |lit|.
+    Pour chaque groupe (même variable d'indice i), si on trouve à la fois i et -i,
+    la variable n'est pas pure ; si on trouve seulement un signe, c'est un littéral pur.
+*)
 let pur clauses =
   (* aplatir et trier par valeur absolue *)
   let lits = List.sort (fun a b -> compare (abs a) (abs b)) (List.flatten clauses) in
