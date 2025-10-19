@@ -61,16 +61,19 @@ let print_modele: resultat -> unit = function
 (** simplifie : literal -> cnf -> cnf 
    applique la simplification de l'ensemble des clauses en mettant
    le littéral l à vrai *)
-let rec simplifie l clauses =
-  match clauses with
-  | [] -> [] (* Cas de base : plus aucune clause à traiter, on renvoie la liste vide. *)
+let rec simplifie l = function
+  | [] -> []
   | c :: rest ->
-    (* Si la clause contient le littéral vrai `l`, elle est satisfaite : on la supprime. *)
-      if List.mem l c then
-        simplifie l rest 
+      if List.exists ((=) l) c then
+        simplifie l rest  (* Clause satisfaite, on la supprime *)
       else
-        let c' = List.filter (fun x -> x <> -l) c in (* Sinon, on enlève le littéral opposé `-l` de la clause, qui est devenu faux. *)
-        c' :: simplifie l rest (* On reconstruit la CNF simplifiée en traitant récursivement le reste. *)
+        let rec filter_l acc = function
+          | [] -> List.rev acc
+          | x :: xs ->
+              if x = -l then filter_l acc xs
+              else filter_l (x :: acc) xs
+        in
+        (filter_l [] c) :: simplifie l rest
 ;;
 
 (** solveur_split_rec : cnf -> interpretation -> resultat
