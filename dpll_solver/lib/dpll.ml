@@ -58,26 +58,32 @@ let print_modele: resultat -> unit = function
      List.iter (fun i -> print_int i; print_string " ") modele_trie;
      print_string "0\n"
 
-(** simplifie : literal -> cnf -> cnf 
-   applique la simplification de l'ensemble des clauses en mettant
-   le littéral l à vrai *)
+(** simplifie : literal -> cnf -> cnf
+   Applique la règle de simplification à un ensemble de clauses
+   en supposant le littéral l vrai :
+   - Toutes les clauses contenant l sont supprimées (car satisfaites).
+   - Toutes les occurrences du littéral -l (la négation de l) sont
+     supprimées des clauses restantes. *)
 let rec simplifie l = function
-  | [] -> []
+  | [] -> [] (* Cas de base : la liste de clauses est vide. *)
   | c :: rest ->
       if List.exists ((=) l) c then
         simplifie l rest  (* Clause satisfaite, on la supprime *)
       else
+        (* Etape 2 : l n'est pas dans c. On doit filtrer la clause
+        pour enlever la négation -l. *)
         let rec filter_l acc = function
           | [] -> List.rev acc
           | x :: xs ->
-              if x = -l then filter_l acc xs
+              if x = -l then filter_l acc xs (* -l trouvé, on le supprime. *)
               else filter_l (x :: acc) xs
         in
         (filter_l [] c) :: simplifie l rest
 ;;
 
 (** solveur_split_rec : cnf -> interpretation -> resultat
-   exemple d'utilisation de `simplifie' cette fonction ne doit pas être modifiée, sauf si vous changez 
+   exemple d'utilisation de `simplifie' cette fonction ne doit 
+   pas être modifiée, sauf si vous changez 
    le type de la fonction simplifie *)
 let rec solveur_split_rec clauses interpretation =
   (* l'ensemble vide de clauses est satisfiable *)
@@ -96,21 +102,25 @@ let solveur_split clauses = solveur_split_rec clauses []
 (** Solveur dpll récursif *)
 
 (** pur : cnf -> literal option
-    - si `clauses' contient au moins un littéral pur, retourne
-      ce littéral ;
-    - sinon renvoie None *)
+    Recherche un littéral pur dans l'ensemble des clauses.
+    - Si un littéral est trouvé pur, retourne Some l.
+    - Sinon retourne None. *)
 let pur clauses =
-  (* Aplatir et trier par valeur absolue *)
+  (* Etape 1 : Aplatir la cnf et trier les littéraux par valeur absolue (ex: [1; -2; 2] devient [-2; 1; 2]). *)
   let lits = List.sort (fun a b -> compare (abs a) (abs b)) (List.flatten clauses) in
+  (* Etape 2 : parcourir la liste pour trouver un groupe de littéraux (ex: 2 et -2) qui n'a pas sa négation. *)
   let rec aux = function
-    | [] -> None
+    | [] -> None (* Cas de base : liste vide, aucun pur trouvé. *)
     | x :: xs ->
+        (* Etape 3 : vérifier si le groupe de x (tous les x et -x) contient la négation. *)
         let rec fold_group (current_abs, seen_neg, last_lit) = function
-          | [] -> if not seen_neg then Some last_lit else None
+          | [] -> if not seen_neg then Some last_lit else None (* Fin de liste : pur si négation jamais vue. *)
           | y :: ys ->
               if abs y = current_abs then
+                (* On reste dans le groupe, on note si y est la négation. *)
                 fold_group (current_abs, seen_neg || y = -last_lit, last_lit) ys
               else
+                (* Changement de groupe : si le groupe fini était pur, on le retourne, sinon on continue. *)
                 if not seen_neg then Some last_lit
                 else aux (y :: ys)
         in
