@@ -34,13 +34,12 @@ Questions sur votre code
 
    Non, nous n'avons pas utilisé la fontion `filter_map` dans notre implémentation de `simplifie`.
    Notre implémentation fonctione comme ceci :
-      - Elle parcourt récursivement la liste des clauses.
-      - Si une clause contient le littéral l, cette clause 
-      est considérée comme satisfaite donc on la supprime de la CNF.
-      - Sinon, on crée une nouvelle clause c' en enlevant toutes les occurrences de -l avec 
-      `List.filter`.
+      - Si une clause contient le littéral l (vérifié avec `List.exists`), cette clause est satisfaite
+        et nous la supprimons en continuant la récursion sur le reste des clauses.
+      - Sinon, on utilise une fonction auxiliaire locale récursive (`filter_l`) pour reconstruire la clause
+        en ignorant toutes les occurrences du littéral opposé -l.
       - Pour finir, la clause simplifiée c' est ajoutée à la liste des clauses restantes et 
-      la fonction continue récursivement sur le reste de la CNF.
+        la fonction continue récursivement sur le reste de la CNF.
 
 ---
 
@@ -55,11 +54,10 @@ Questions sur votre code
 
    Non, nous n'avons pas utilisé de fonction auxiliaire externe dans notre implémentation de `unitaire`.
    Notre implémentation fonctionne comme ceci:
-      - Elle parcourt récursivement la liste des clauses.
-      - Pour chaque clause, elle vérifie si la clause est unitaire (donc un seul littéral).
-      - Si une clause unitaire est trouvée, elle retourne ce littéral avec Some.
-      - Sinon, la fonction continue sur le reste des clauses et retourne None si aucune clause 
-      unitaire n’est trouvée.
+      - Si une clause correspond au litteral [lit] (une liste contenant un unique élément), elle
+        est unitaire, et nous retournons Some lit.
+      - Si elle est vide ou elle a plus d'un élément, elle n'est pas unitaire, et nous continuons
+        la récursion sur le reste de la liste des clauses.
 
 ---
 
@@ -71,12 +69,11 @@ Questions sur votre code
    Pour `pur`, nous utilisons uniquement des fonctions de la bibliothèque standard List :
       - `List.flatten` pour transformer la liste de clauses en une seule liste des littéraux,
          pour faciliter la recherche des littéraux purs.
-      - `List.mem` pour vérifier si l’opposé d’un littéral (−lit) est présent dans la liste; 
-         si c’est le cas, le littéral n’est pas pur.
-
-   La fonction pur fonctionne ainsi : elle parcourt récursivement la liste des littéraux obtenue avec 
-   `List.flatten` et retourne le premier littéral où son opposé n’est pas présent, ou None si 
-   aucun littéral pur n’existe.
+      - `List.sort` est utilisée avec abs pour trier cette liste par valeur absolue. Cela 
+        regroupe les littéraux et leurs négations (ex: 1, -1, puis 2, -2...).
+      - On utilise ensuite deux fonctions récursives locales (aux et fold_group) pour parcourir
+        cette liste triée. Elles avancent "groupe par groupe" (par valeur absolue) et vérifient si la
+        négation d'un littéral est présente dans son groupe. Si un groupe est terminé sans avoir vu de négation, le littéral est pur.
 
 ---
 
@@ -84,17 +81,32 @@ Questions sur votre code
    `solveur_split` et `solveur_dpll_rec` ont un comportement
    différent, et expliquez les différences entre ces deux fonctions.
 
-**à remplir**
+   Un exemple simple est la formule contradictoire : [[1]; [-1]].
+
+   `solveur_dpll_rec` : Il détecte d'abord la clause unitaire [1]. Il appelle simplifie 1, ce qui transforme la CNF en [[]] (une clause vide). A la prochaine récursion, il détecte la clause vide et retourne immédiatement Unsat.
+
+   `solveur_split` : Il n'a pas de détection de clause unitaire. Il choisit un littéral (ex: 1) et branche :
+
+      Il tente l=1. simplifie 1 [[1]; [-1]] donne [[]]. L'appel récursif retourne Unsat.
+
+      Comme la première tentative a échoué, le solveur essaie l=-1. En simplifiant [[1]; [-1]] avec -1, il obtient [[1]]. L'algorithme continue alors de s'exécuter sur [[1]]. Il doit à nouveau choisir un littéral (il prend 1), simplifie encore, et obtient [] (une liste vide). Une liste vide signifie Sat, donc il retourne la solution Sat [1; -1].
+
+   solveur_dpll_rec est plus efficace : il simplifie d'abord la formule (unitaire/pur) pour détecter les contradictions.
+   À l'inverse, solveur_split se contente de deviner (essaye vrai puis faux) sans cette simplification, ce qui est moins performant et peut rater des contradictions évidentes.
 
 ---
 5. Quelle a été votre méthodologie de test ?
 
-**à remplir**
+   Nous avons utilisé une méthodologie de tests unitaires intégrés directement dans le code source (les let%test "...").
+
+      Nous avons écrit des tests spécifiques pour chaque fonction de base : simplifie (cas de suppression de clause, suppression de littéral), unitaire (cas vide, cas trouvé, cas non-unitaire), et pur (cas simple, cas multiple, cas aucun pur).
+
+      Nous avons ensuite écrit des tests d'intégration pour le solveur_dpll complet, vérifiant qu'il retourne bien Sat ou Unsat sur des formules simples dont nous connaissions la solution.
 
 ---
 6. Avez-vous d'autres remarques sur votre rendu ? (question optionnelle)
 
-**à remplir**
+   Notre implémentation de la fonction pur est optimisée. En effectuant un tri unique (List.sort) au début, nous pouvons vérifier la pureté de tous les littéraux en un seul passage linéaire sur la liste triée, ce qui est plus efficace que de parcourir la liste entière pour chaque littéral (par exemple avec List.mem).
 
 ---
 
