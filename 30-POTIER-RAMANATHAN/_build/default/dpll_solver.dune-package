@@ -1,4 +1,0 @@
-(lang dune 3.12)
-(name dpll_solver)
-(sections (lib .) (bin ../../bin))
-(files (lib (META dune-package opam)) (bin (dpll_solver)))
